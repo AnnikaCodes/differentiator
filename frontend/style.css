@@ -1,0 +1,10 @@
+body {
+    width: max(50em, min(500px, 95vw));
+    margin: 0 auto;
+    font-family: sans-serif;
+    font-size: 1.1rem;
+}
+
+h1 {
+    text-align: center;
+}

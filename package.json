@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "build": "esbuild backend/*.ts --outdir=built --platform=node --target=node18 --format=esm",
+    "start": "npm run build && node --es-module-specifier-resolution=node built/index.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@fastify/cors": "^8.1.1",
+    "@types/better-sqlite3": "^7.6.2",
+    "better-sqlite3": "^7.6.2",
+    "dotenv": "^16.0.1",
+    "esbuild": "^0.15.5",
+    "fastify": "^4.9.2",
+    "json-schema-to-ts": "^2.5.5",
+    "manifold-sdk": "^1.0.3",
+    "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
+}

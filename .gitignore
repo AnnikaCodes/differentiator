@@ -5,10 +5,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
+/built/
+/node_modules/
+/package-lock.json
+/trades.log
+/orders.jsonl
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
+*.db
 # Runtime data
 pids
 *.pid

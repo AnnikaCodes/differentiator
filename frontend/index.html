@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="/style.css">
+        <style>
+            p {
+                padding-left: 20px;
+            }
+            small {
+                font-size: 0.75em;
+            }
+        </style>
+        <title>differentiator</title>
+    </head>
+    <body>
+        <h1><center>differentiator</center></h1>
+        <hr />
+        <center><strong>trade</strong> | <a href="/about.html">about</a></center>
+	<span id="status">Connecting to differentiator...</span>
+        <h3>disclaimer</h3>
+        <small>
+            <p>
+                differentiator is beta software; it might mess up.
+                If it does, I'll try to make it right, but I can only promise this if the losses are less than M$500 and you <a href="mailto:arae@duck.com">contact me</a> promptly.
+                (You can also get in touch in the Manifold Discord server.)
+            </p><p>
+                Manifold Markets doesn't yet support scoped permissions, so your API key gives access to your whole account.
+                Your API key will be stored on differentiator's server; you can reset it in your account settings any time
+                (though this will break any actions you've asked differentiator to take in the future, like cancelling limit orders).
+            </p><p>
+                Currently, differentiator is free, but in the future, I may add a fee (some proportion of trades) to use it.
+            </p>
+        </small>
+            <label for="APIKey">
+                <strong>enter your Manifold Markets API key to use differentiator:</strong>
+                <br />
+            </label>
+            <input type="password" style="width: 250px; margin-left: 20px;" id="APIKey" onchange="getOrders()">
+
+
+        <h2>your trades</h2><div id="trades" style="padding-left: 20px;">
+            (you need to enter your API key to see your trades)
+        </div>
+
+        <h2>place an order</h2>
+        <form style="margin-bottom: 20px;" action="javascript:void(0);">
+            <p>
+                <label for="type">type of trade: </label>
+                <select id="type" required>
+                    <option value="ExpiringLimitOrder">expiring limit order</option>
+                </select>
+            </p>
+
+            <p>
+                <label for="marketURL">URL of the market to trade in:</label>
+                <input type="url" id="marketURL" onchange="checkMarket()" required>
+                <br />
+                <span id="marketInfo"></span>
+            </p>
+
+            <p>
+                <label for="amount">maximum amount that differentiator will spend on this order: M$</label>
+                <input type="number" id="amount" min="1" value="10" required>
+            </p>
+
+            <p>
+                <label for="outcome">outcome to bet on: </label>
+                <select id="outcome" onchange="fixAboveBelow()" required>
+                    <option value="YES">YES ✅</span></option>
+                    <option value="NO">NO ❌</option>
+                </select>
+            </p>
+
+            <p>
+                <label for="limitProb">buy if the market probability is <span id="aboveBelow">below</span></label>
+                <input type="number" id="limitProb" min="1" max="99" required="true" value="50" required>%
+            </p>
+
+            <p>
+                <label for="expiry">expires at: </label>
+                <input type="datetime-local" id="expiry" required>
+            </p>
+
+            <center>
+                <div id="info"></div>
+                <input type="submit" value="place order" style="margin: 0 0 0 0;" onclick="placeOrder()">
+            </center>
+        </form>
+
+        <script>
+            const DIFFERENTIATOR_API_URL = "http://localhost:3000/";
+            let APIKey = '';
+            let marketID = '';
+            document.getElementById('expiry').valueAsNumber = (Math.floor(Date.now() / 60000 - (new Date()).getTimezoneOffset()) * 60000);
+
+	async function checkStatus() {
+		// no auth
+		try {
+			const response = await (await fetch(DIFFERENTIATOR_API_URL + 'ping')).json();
+			if (response.up !== true) throw new Error('wtf');
+			document.getElementById('status').innerText = '✅ differentiator is online!';
+		} catch (e) {
+			document.getElementById('status').innerText = `❌ either differentiator is offline or your browser can't connect to it`;
+		}
+	}
+	checkStatus();
+    checkMarket();
+    getOrders();
+
+            function fixAboveBelow() {
+                const aboveBelow = document.getElementById('aboveBelow');
+                const outcome = document.getElementById('outcome');
+                if (outcome.value == 'YES') {
+                    aboveBelow.innerText = 'below';
+                } else {
+                    aboveBelow.innerText = 'above';
+                }
+            }
+
+            async function getMarketID(slug) {
+                const response = await (await fetch('https://manifold.markets/api/v0/slug/' + slug)).json();
+                return response.id ? [response.id, response.question] : [null, null];
+            }
+
+            async function checkMarket() {
+                const marketSlug = document.getElementById('marketURL').value.split('/').pop();
+                const [id, name] = await getMarketID(marketSlug);
+                if (!id) {
+                    document.getElementById('marketInfo').innerHTML = '<strong style="color: red">Market not found</strong>';
+                } else {
+                    marketID = id;
+                    document.getElementById('marketInfo').innerHTML = 'Market found: <strong>' + name + '</strong>';
+                }
+            }
+
+            async function placeOrder() {
+                const type = document.getElementById('type').value;
+                const amount = document.getElementById('amount').value;
+                const outcome = document.getElementById('outcome').value;
+                const limitProb = (parseFloat(document.getElementById('limitProb').value) / 100).toPrecision(2);
+                const expiry = (new Date(document.getElementById('expiry').value)).getTime();
+
+                if (!marketID) {
+                    document.getElementById('info').innerHTML = '<strong style="color: red">you must specify a market</strong>';
+                    return;
+                }
+                if (expiry < Date.now()) {
+                    document.getElementById('info').innerHTML = '<strong style="color: red">expiry must be in the future</strong>';
+                    return;
+                }
+                if (!APIKey) {
+                    document.getElementById('info').innerHTML = '<strong style="color: red">you must enter your API key first!</strong>';
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    marketID: marketID,
+                    amount: amount,
+                    outcome: outcome,
+                    limitProb: limitProb,
+                    expiresAt: expiry
+                });
+                const response = await fetch(DIFFERENTIATOR_API_URL + 'orders/expiringLimit?' + params , {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Key ' + APIKey
+                    },
+                });
+                const json = await response.json();
+                if (json.error) {
+                    document.getElementById('info').innerHTML = '<strong style="color: red">An error occurred ' + json.error + '</strong>';
+                } else {
+                    document.getElementById('info').innerHTML = '<strong style="color: green">order placed successfully!</strong>';
+                    getOrders();
+                }
+            }
+
+            async function getOrders() {
+                APIKey = document.getElementById("APIKey").value;
+                if (!APIKey) return;
+                const response = (await (await fetch(DIFFERENTIATOR_API_URL + 'orders', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Key ' + APIKey
+                    }
+                })).json());
+                if (response.error) {
+                    document.getElementById('orders').innerHTML = '<strong style="color: red">An error occurred ' + response.error + '</strong>';
+                } else if (!response.orders.length) {
+                    document.getElementById("trades").innerHTML = '<span style="color: red">no trades yet :(</span> <br /> if you think this is wrong, double-check your API key.';
+                    return;
+                }
+                document.getElementById("trades").innerHTML = ''
+                for (const order of response.orders) {
+                    const orderType = order.type === 'ExpiringLimitOrder' ? 'expiring limit order' : 'unknown';
+                    const marketName = await getMarketName(order.state.marketID) || 'unknown market';
+                    document.getElementById("trades").innerHTML += ('<details>' +
+                        '<summary>' + orderType + ' on ' + marketName + '</summary>' +
+                        '<ul>' +
+                        '<li>will buy M$' + order.state.amount +
+                        ' of <strong style="color: ' + (order.state.outcome === 'YES' ? 'green' : 'red') + ';">' + order.state.outcome + '</strong>' +
+                        ' if market probability is ' + (order.state.outcome === 'YES' ? 'below ' : 'above ') + order.state.limitProb * 100 + '%</li>' +
+                        '<li>will be cancelled on ' + new Date(order.state.expiresAt).toLocaleString() + '</li>' +
+                        '<li>limit order placed on ' + new Date(order.createdAt).toLocaleString() + '</li>' +
+                        (!order.state.betID ?  '<li><strong>⚠️ differentiator failed to place this limit order</strong></li>' : '') +
+                        '</ul>' +
+                    '</details>');
+                }
+            }
+
+            async function getMarketName(market) {
+                const response = await (await fetch('https://manifold.markets/api/v0/market/' + market)).json();
+                return response.question || null;
+            }
+        </script>
+    </body>
+</html>
