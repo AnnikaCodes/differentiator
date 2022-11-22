@@ -114,7 +114,7 @@ async function cancelLimitOrder(id: string, apiKey: string) {
 const ORDERS_DATABASE = 'orders.db';
 const LOG_FILE = 'trades.log';
 
-const sql = sqlite(ORDERS_DATABASE);
+export const sql = sqlite(ORDERS_DATABASE);
 const SELECT_ALL_ORDERS = sql.prepare('SELECT * FROM orders');
 const SELECT_ORDER_BY_ID = sql.prepare<[string]>('SELECT * FROM orders WHERE id = ?');
 const SELECT_ORDERS_BY_API_KEY = sql.prepare<[string]>('SELECT * FROM orders WHERE api_key = ?');
@@ -170,6 +170,7 @@ export function getOrdersByAPIKey(key: string) {
     return SELECT_ORDERS_BY_API_KEY.all(key).map(sqlToOrder); // get orders from database
 }
 
+
 export async function executeOrders() {
     // execute orders
     for (const order of getAllOrders()) {
@@ -179,3 +180,9 @@ export async function executeOrders() {
         }
     }
 }
+
+
+async function getGroupMarkets(id: string) {
+	return await (await fetch(`https://manifold.markets/api/v0/group/by-id/${id}/markets`)).json();
+}
+

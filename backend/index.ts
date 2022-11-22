@@ -5,7 +5,9 @@ process.env.NODE_ENV = 'production';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { addRoutes, errorHandler } from './api';
-import { executeOrders, log, orders } from './orders';
+import { executeOrders, log, orders, snap } from './orders';
+import { snapLoop } from './snap';
+import { fiveThirtyEightLoop} from './538';
 
 async function start() {
     const server = Fastify();
@@ -25,12 +27,23 @@ async function loop() {
     const delta = Date.now() - start; // end time
 
     numloops++;
-    if (numloops % 100000 === 0) log('server', `loop #${numloops} took ${delta} ms`); // log time taken
+    if (numloops % 1000 === 0) log('server', `loop #${numloops} took ${delta} ms`); // log time taken
     if (numloops === Number.MAX_SAFE_INTEGER) {
         numloops = 0;
         log('server', 'reset loop count');
     }
 
+	    try {
+		    await snapLoop();
+	    } catch (e) {
+		    log('snap', e);
+	    }
+
+	    try {
+		    await fiveThirtyEightLoop();
+	    } catch (e) {
+		   log('538', e);
+	    } 
     setTimeout(loop, 1000 + delta); // loop again in 1s
 }
 
