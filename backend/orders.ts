@@ -97,7 +97,7 @@ export class ExpiringLimitOrder extends Order {
     }
 }
 
-async function cancelLimitOrder(id: string, apiKey: string) {
+export async function cancelLimitOrder(id: string, apiKey: string) {
     const result = await fetch(`https://manifold.markets/api/v0/bet/cancel/${id}`, {
         method: 'POST',
         headers: {

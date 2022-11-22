@@ -5,8 +5,11 @@ process.env.NODE_ENV = 'production';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { addRoutes, errorHandler } from './api';
-import { executeOrders, log, orders, snap } from './orders';
-import { snapLoop } from './snap';
+import { executeOrders, log } from './orders';
+let snapLoop;
+try {
+    snapLoop = require('./snap').snapLoop;
+} catch (e) {}
 import { fiveThirtyEightLoop} from './538';
 
 async function start() {
@@ -34,16 +37,18 @@ async function loop() {
     }
 
 	    try {
-		    await snapLoop();
+		    await snapLoop?.();
 	    } catch (e) {
 		    log('snap', e);
 	    }
 
-	    try {
+    if (numloops % 10 === 0) {
+        try {
 		    await fiveThirtyEightLoop();
 	    } catch (e) {
 		   log('538', e);
-	    } 
+	    }
+    }
     setTimeout(loop, 1000 + delta); // loop again in 1s
 }
 
