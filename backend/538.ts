@@ -10,6 +10,104 @@ interface WorldCupData {
 	updatedAt: string;
 }
 
+
+const teamBasedPredictions: Record<string, {stat: keyof Team538Data, marketID: string}[]> = {
+	GER: [
+		{stat: "make_round_of_16", marketID: "YFm9Va8cYKzB3gYy5OCJ"},
+		{stat: "make_quarters", marketID: "oU9BbZHBRs7UwREZJdOO"},
+		{stat: "make_semis", marketID: "0EWJqIFbAlrPsFaPAiMP"},
+	],
+	BEL: [
+		{stat: "make_round_of_16", marketID: "WJnsKI1GPChi5JYK5up5"},
+		{stat: "make_quarters", marketID: "QbdOSJusvpCMI3k7P2MC"},
+	],
+	USA: [
+		{stat: "make_round_of_16", marketID: "8v2GLnq8gl7oaRLLxFS8"},
+		{stat: "make_round_of_16", marketID: "UcqgVRxmPIcRmukmvtLf"},
+		{stat: "make_quarters", marketID: "c3Rx5dl8or1DW9jZQlPD"},
+	],
+	CRO: [
+		{stat: "make_round_of_16", marketID: "IUawuWAQhqyzU7jcdqOI"},
+		{stat: "make_quarters", marketID: "sSQnZ51A7PQK2KJKxgdX"},
+	],
+	ARG: [
+		{stat: "make_round_of_16", marketID: "CcR4ni6oUXhWp8usYMtb"},
+		{stat: "win_league", marketID: "ZvniYi4y5VFgrl22Ge0V"},
+		{stat: "win_league", marketID: "XCq9yD0FHY0oYAGpBKro"},
+		{stat: "make_quarters", marketID: "K2oEBrjrVxVRYwbpy3OO"},
+	],
+	ECU: [
+		{stat: "make_round_of_16", marketID: "V6g3VM27Z4S3HjzcJasy"},
+		{stat: "make_quarters", marketID: "38IGk0J2dDUPGm6Hot8N"},
+	],
+	ENG: [
+		{stat: "make_round_of_16", marketID: "GZAbSkvyC3DtUr6fLefp"},
+		{stat: "make_semis", marketID: "k0Bqx1e8QqC2WQ9PQvKa"},
+		{stat: "make_quarters", marketID: "I6rfSyjSGLmAsyWm0Ugn"},
+	],
+	ESP: [
+		{stat: "make_round_of_16", marketID: "ZAcvJZFcyPXmqK0xckkn"},
+		{stat: "make_quarters", marketID: "urZjXCa2rLnM1SCt4h2S"},
+		{stat: "make_semis", marketID: "qiRDzQUlQc1YvYM5w6i9"},
+	],
+	BRA: [
+		{stat: "make_round_of_16", marketID: "aKf7U3BCWP2kjKO5xCkC"},
+		{stat: "win_league", marketID: "5qfGZ4RNEbQvLDBzRHsr"},
+		{stat: "win_league", marketID: "pnDqs1bzLDIFSkIxYhwS"},
+		{stat: "make_final", marketID: "V14zWAVeHkEx2X1MgyN0"},
+		{stat: "make_quarters", marketID: "3W1fkKHJHS5kqgWp2p70"},
+		{stat: "make_semis", marketID: "utBcCQjS0PMptnhgTkrs"},
+	],
+	WAL: [{stat: "make_round_of_16", marketID: "R5K7dVvC5aWc51BTdO6e"}],
+	QAT: [{stat: "make_round_of_16", marketID: "Nw97oCX565OU29NTf5hj"}],
+	URU: [
+		{stat: "make_round_of_16", marketID: "IgQQLLHf3ZMwNBiSvQMu"},
+		{stat: "make_quarters", marketID: "u2Gzw2B317llef1Zip8Y"},
+	],
+	FRA: [
+		{stat: "make_round_of_16", marketID: "TmBYTQRmK4WmB9ccdBlF"},
+		{stat: "make_final", marketID: "o5QYrLL1HG3m2upivu8R"},
+		{stat: "make_quarters", marketID: "JLY3HZkXqGRdU4tsnRR3"},
+		{stat: "make_semis", marketID: "0BQsGtMo1p8rYozUnPxU"},
+	],
+	SEN: [{stat: "make_round_of_16", marketID: "o6Dlx0cAOnobwPESo1rk"}],
+	SRB: [
+		{stat: "make_round_of_16", marketID: "YS3gaRISdsrtwcFp1Igm"},
+		{stat: "win_league", marketID: "HC5niEB2nm2HD7uPn2JW"},
+	],
+	MEX: [{stat: "make_round_of_16", marketID: "iDmbPRsO6AQMYWRXPTHy"}],
+	TUN: [{stat: "make_round_of_16", marketID: "WB4ZTEpE2SOzLc8KHg76"}],
+	DEN: [
+		{stat: "make_round_of_16", marketID: "Xx5s9aNT3SXPEgmeZoat"},
+		{stat: "make_quarters", marketID: "AC10irlxbuoSF3VP7XBB"},
+	],
+	NET: [
+		{stat: "make_round_of_16", marketID: "2HsbLKFbPnJD09FLEqa7"},
+		{stat: "make_quarters", marketID: "seCDX4eQ2BTq0WHuhPo6"},
+		{stat: "make_semis", marketID: "WnL6xEXh2ewR8lhUjC8i"},
+	],
+	IRN: [{stat: "make_round_of_16", marketID: "UZ70VpzMUIxXl5KU26pL"}],
+	SUI: [
+		{stat: "make_round_of_16", marketID: "1Lg5QvnL6xjXJ4RuBlCv"},
+		{stat: "make_quarters", marketID: "PislhQDbrnREHMNun5Dv"},
+	],
+	CAN: [{stat: "make_round_of_16", marketID: "f0EJn03cDRjsWXNjGkbR"}],
+	KSA: [{stat: "make_round_of_16", marketID: "x3fMvB7LYIsSPBBqOSej"}],
+	JPN: [{stat: "make_round_of_16", marketID: "r4eAq9AF78YpX68THN3k"}],
+	GHA: [{stat: "make_round_of_16", marketID: "VUSSNV58T90MraUTAxR6"}],
+	POR: [
+		{stat: "make_round_of_16", marketID: "NEEwrIxHvoT8TI7IZaaj"},
+		{stat: "make_quarters", marketID: "Bes54Hucc6Yvr8KwieLu"},
+		{stat: "make_semis", marketID: "Ioz4DYuvWejPxlbQj02R"},
+	],
+	POL: [{stat: "make_round_of_16", marketID: "rAsugkOqtp1dB0OHSvqt"}],
+	MAR: [{stat: "make_round_of_16", marketID: "I8QE9iTGSsNfvRa0JyT5"}],
+	CRC: [{stat: "make_round_of_16", marketID: "uZqmbYkJA23CmkHPVXRH"}],
+	KOR: [{stat: "make_round_of_16", marketID: "RPaQMScP4iXlvv8mN5z1"}],
+	AUS: [{stat: "make_round_of_16", marketID: "t4r0WYOcgKzY9ff68Ea2"}],
+	CAM: [{stat: "make_round_of_16", marketID: "LACCw92jOggBORiQbNNo"}],
+};
+
 interface Team538Data {
 	code: string,
 	name: string,
@@ -103,71 +201,50 @@ async function getWorldCupData(ifModifiedSince?: Date): Promise<WorldCupData | n
 		return null;
 	}
 
-	return {
+	const wcData: WorldCupData = {
 		teams: json.forecasts[0].teams,
 		matches: json.matches,
 		fetchedAt: new Date(),
 		updatedAt: json.updated_at
 	};
+	/*
+	for (const team of wcData.teams) {
+		for (const [stat, stage, closeTime] of [
+			['make_final', 'Finals', (new Date('December 14, 2022 23:59:59')).valueOf()],
+			['make_quarters', 'Quarterfinals', (new Date('December 9, 2022 23:59:59')).valueOf()],
+			['make_round_of_16', 'Round of 16', (new Date('December 2, 2022 23:59:59')).valueOf()],
+			['make_semis', 'Semifinals', (new Date('December 10, 2022 23:59:59')).valueOf()],
+			['win_league', 'Win World Cup', (new Date('December 14, 2022 23:59:59')).valueOf()],
+		]) {
+			if (teamBasedPredictions[team.code]?.some(p => p.stat === stat)) continue;
+			if (!teamBasedPredictions[team.code]) teamBasedPredictions[team.code] = [];
+			if (team[stat] < 0.20) continue;
+			const description = `Resolves YES if ${team.name}'s Men's National Team ${stat === 'win_league' ? `wins` : `reaches the ${stage} of`} the 2022 FIFA World Cup in Qatar.`;
+			const {slug} = await arae.createMarket({
+				description,
+				outcomeType: 'BINARY',
+				question: `2022 World Cup: Will ${team.name} ${stat === 'win_league' ? `win` : `reach the ${stage}`}?`,
+				//@ts-ignore
+				closeTime,
+				initialProb: 50,
+				groupId: 'ujdSUUHAKLNPFSj2PTNX',
+			});
+			const market = await arae.getMarket({slug});
+			teamBasedPredictions[team.code].push({
+				stat,
+				marketID: market.id,
+			});
+
+			await moveMarketToProb(team[stat], 100, market.id);
+			console.log(JSON.stringify(teamBasedPredictions, null, 2));
+		}
+	}*/
+	return wcData;
 }
 
-// record key is team code
-const teamBasedPredictions: Record<string, {stat: keyof Team538Data, marketID: string}[]> = {
-	'GER': [
-		{stat: 'make_round_of_16', marketID: 'YFm9Va8cYKzB3gYy5OCJ'},
-		{stat: 'make_quarters', marketID: 'oU9BbZHBRs7UwREZJdOO'}
-	],
-	'BEL': [{stat: 'make_round_of_16', marketID: 'WJnsKI1GPChi5JYK5up5'}],
-	'USA': [
-		{stat: 'make_round_of_16', marketID: '8v2GLnq8gl7oaRLLxFS8'},
-		{stat: 'make_round_of_16', marketID: 'UcqgVRxmPIcRmukmvtLf'},
-		{stat: 'make_quarters', marketID: 'c3Rx5dl8or1DW9jZQlPD'},
-	],
-	'CRO': [{stat: 'make_round_of_16', marketID: 'IUawuWAQhqyzU7jcdqOI'}],
-	'ARG': [
-		{stat: 'make_round_of_16', marketID: 'CcR4ni6oUXhWp8usYMtb'},
-		{stat: 'win_league', marketID: 'ZvniYi4y5VFgrl22Ge0V'},
-		{stat: 'win_league', marketID: 'XCq9yD0FHY0oYAGpBKro'},
-	],
-	'ECU': [{stat: 'make_round_of_16', marketID: 'V6g3VM27Z4S3HjzcJasy'}],
-	'ENG': [
-		{stat: 'make_round_of_16', marketID: 'GZAbSkvyC3DtUr6fLefp'},
-		{stat: 'make_semis', marketID: 'k0Bqx1e8QqC2WQ9PQvKa'},
-	],
-	'ESP': [{stat: 'make_round_of_16', marketID: 'ZAcvJZFcyPXmqK0xckkn'}],
-	'BRA': [
-		{stat: 'make_round_of_16', marketID: 'aKf7U3BCWP2kjKO5xCkC'},
-		{stat: 'win_league', marketID: '5qfGZ4RNEbQvLDBzRHsr'},
-		{stat: 'win_league', marketID: 'pnDqs1bzLDIFSkIxYhwS'},
-	],
-	'WAL': [{stat: 'make_round_of_16', marketID: 'R5K7dVvC5aWc51BTdO6e'}],
-	'QAT': [{stat: 'make_round_of_16', marketID: 'Nw97oCX565OU29NTf5hj'}],
-	'URU': [{stat: 'make_round_of_16', marketID: 'IgQQLLHf3ZMwNBiSvQMu'}],
-	'FRA': [{stat: 'make_round_of_16', marketID: 'TmBYTQRmK4WmB9ccdBlF'}],
-	'SEN': [{stat: 'make_round_of_16', marketID: 'o6Dlx0cAOnobwPESo1rk'}],
-	'SRB': [
-		{stat: 'make_round_of_16', marketID: 'YS3gaRISdsrtwcFp1Igm'},
-		{stat: 'win_league', marketID: 'HC5niEB2nm2HD7uPn2JW'},
-	],
-	'MEX': [{stat: 'make_round_of_16', marketID: 'iDmbPRsO6AQMYWRXPTHy'}],
-	'TUN': [{stat: 'make_round_of_16', marketID: 'WB4ZTEpE2SOzLc8KHg76'}],
-	'DEN': [{stat: 'make_round_of_16', marketID: 'Xx5s9aNT3SXPEgmeZoat'}],
-	'NET': [{stat: 'make_round_of_16', marketID: '2HsbLKFbPnJD09FLEqa7'}],
-	'IRN': [{stat: 'make_round_of_16', marketID: 'UZ70VpzMUIxXl5KU26pL'}],
-	'SUI': [{stat: 'make_round_of_16', marketID: '1Lg5QvnL6xjXJ4RuBlCv'}],
-	'CAN': [{stat: 'make_round_of_16', marketID: 'f0EJn03cDRjsWXNjGkbR'}],
-	'KSA': [{stat: 'make_round_of_16', marketID: 'x3fMvB7LYIsSPBBqOSej'}],
-	'JPN': [{stat: 'make_round_of_16', marketID: 'r4eAq9AF78YpX68THN3k'}],
-	'GHA': [{stat: 'make_round_of_16', marketID: 'VUSSNV58T90MraUTAxR6'}],
-	'POR': [{stat: 'make_round_of_16', marketID: 'NEEwrIxHvoT8TI7IZaaj'}],
-	'POL': [{stat: 'make_round_of_16', marketID: 'rAsugkOqtp1dB0OHSvqt'}],
-	'MAR': [{stat: 'make_round_of_16', marketID: 'I8QE9iTGSsNfvRa0JyT5'}],
-	'CRC': [{stat: 'make_round_of_16', marketID: 'uZqmbYkJA23CmkHPVXRH'}],
-	'KOR': [{stat: 'make_round_of_16', marketID: 'RPaQMScP4iXlvv8mN5z1'}],
-	'AUS': [{stat: 'make_round_of_16', marketID: 't4r0WYOcgKzY9ff68Ea2'}],
-	'CAM': [{stat: 'make_round_of_16', marketID: 'LACCw92jOggBORiQbNNo'}],
 
-};
+
+// record key is team code
 
 
 const BUDGET = 20;
