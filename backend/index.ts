@@ -6,10 +6,6 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { addRoutes, errorHandler } from './api';
 import { executeOrders, log } from './orders';
-let snapLoop;
-try {
-    snapLoop = require('./snap').snapLoop;
-} catch (e) {}
 import { fiveThirtyEightLoop} from './538';
 
 async function start() {
@@ -19,7 +15,7 @@ async function start() {
     await server.register(cors);
 
 
-    const address = await server.listen({ port: 3000, host: '0.0.0.0' });
+    const address = await server.listen({ port: 3000, host: '::1' });
     log('server', `server listening at ${address}`);
 }
 
@@ -35,12 +31,6 @@ async function loop() {
         numloops = 0;
         log('server', 'reset loop count');
     }
-
-	    try {
-		    await snapLoop?.();
-	    } catch (e) {
-		    log('snap', e);
-	    }
 
     if (numloops % 10 === 0) {
         try {

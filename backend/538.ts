@@ -1,15 +1,19 @@
+process.env.NODE_ENV = 'production';
 import {config} from 'dotenv';
 config();
 import {Manifold} from 'manifold-sdk';
 import {cancelLimitOrder, log} from './orders';
 
+const manifold = new Manifold(process.env.FTE_BOT_KEY);
+
+/*
+ * Old - for the 2022 FIFA World Cup
 interface WorldCupData {
 	teams: Team538Data[];
 	matches: Match538Data[];
 	fetchedAt: Date;
 	updatedAt: string;
 }
-
 
 const teamBasedPredictions: Record<string, {stat: keyof Team538Data, marketID: string}[]> = {
 	GER: [
@@ -178,15 +182,133 @@ interface Intermediate538MatchPrediction {
 	prob2: number,
 	probtie: number,
 }
+*/
 
-const manifold = new Manifold(process.env.FTE_BOT_KEY);
-let worldCupData: WorldCupData = (await getWorldCupData())!;
+type PremierLeagueData = PremierLeagueMatch[] & {fetchedAt: Date};
+interface PremierLeagueMatch {
+	id: number,
+    league_id: number,
+    datetime: string, // '2022-10-18T19:15:00Z',
+    status: 'pre' | 'post' | 'live',
+    leg: null,
+    team1: string,
+    team2: string,
+    team1_id: number,
+    team2_id: number,
+    team1_code: string,
+    team2_code: string,
+    prob1: number,
+    prob2: number,
+    probtie: number,
+    round: null,
+    matchday: null,
+
+    score1?: number,
+    score2?: number,
+    adj_score1?: number,
+    adj_score2?: number,
+}
+
+let premierLeagueData: PremierLeagueData;
+// record key is match ID
+const premierLeagueMarkets: Record<number, {greater_score: 1 | 2 | 'tie', marketID: string, autoResolve?: boolean}[]> = {
+	401447565: [{
+        greater_score: 1,
+        marketID: "jZeE5uQ56QKaOwpsRVCC",
+        autoResolve: true
+    }],
+    401447566: [{
+        greater_score: 1,
+        marketID: "3StJlyGVeHJTUJ5YoWX7",
+        autoResolve: true
+    }],
+    401447567: [{
+        greater_score: 1,
+        marketID: "kGucNHg7HIN5cGvbpJkR",
+        autoResolve: true
+    }],
+    401447568: [{
+        greater_score: 1,
+        marketID: "O8lgu1nNA5sAJRlFLYfM",
+        autoResolve: true
+    }],
+    401447569: [{
+        greater_score: 1,
+        marketID: "Jgv4MGosjZEZt7BACvwv",
+        autoResolve: true
+    }],
+    401447570: [{
+        greater_score: 1,
+        marketID: "uQmbRnniI8wbxZSTXst8",
+        autoResolve: true
+    }],
+    401447571: [{
+        greater_score: 1,
+        marketID: "XLCgQiHdcU72vkR40Z2n",
+        autoResolve: true
+    }],
+    401447572: [{
+        greater_score: 1,
+        marketID: "Nihg3aTjn4VDYoEVY7Ac",
+        autoResolve: true
+    }],
+    401447573: [{
+        greater_score: 1,
+        marketID: "JkraDjJYnfxNGfCKrr0j",
+        autoResolve: true
+    }],
+    401447574: [{
+        greater_score: 1,
+        marketID: "VeoNk3aic9OT1CCszAWt",
+        autoResolve: true
+    }],
+    401447575: [{
+        greater_score: 1,
+        marketID: "yduTJkjeS4ZTKh06jYWG",
+        autoResolve: true
+    }],
+    401447576: [{
+        greater_score: 1,
+        marketID: "9xWvx5IcHSvt3SdCjijL",
+        autoResolve: true
+    }],
+    401447579: [{
+        greater_score: 1,
+        marketID: "pfpH8V40tc8GWcB2Uzp7",
+        autoResolve: true
+    }],
+    401447580: [{
+        greater_score: 1,
+        marketID: "Y0fUlgO3aycScTdNJ5LX",
+        autoResolve: true
+    }],
+    401447581: [{
+        greater_score: 1,
+        marketID: "MUIRX1bs2XFsGfYhdJ1h",
+        autoResolve: true
+    }],
+    401447582: [{
+        greater_score: 1,
+        marketID: "umKHSkixFjMCL7EjJBpS",
+        autoResolve: true
+    }],
+    401447583: [{
+        greater_score: 1,
+        marketID: "KqwfGmuEbAmwJhqphBN9",
+        autoResolve: true
+    }],
+    401447584: [{
+        greater_score: 1,
+        marketID: "IGYVUbvezJ38UharJQil",
+        autoResolve: true
+    }]
+};
 
 // returns null if no change or error
-async function getWorldCupData(ifModifiedSince?: Date): Promise<WorldCupData | null> {
+async function getPremierLeagueData(ifModifiedSince?: Date): Promise<PremierLeagueData | null> {
 	let json;
 	try {
-		const result = await fetch("https://projects.fivethirtyeight.com/soccer-api/international/2022/world-cup/summary.json", {
+		const result = await fetch("https://projects.fivethirtyeight.com/soccer-predictions/forecasts/2022_premier-league_matches.json", {
 			"credentials": "include",
 			"headers": {
 				"User-Agent": "FiveThirtyEight Trading Bot/1.0",
@@ -195,51 +317,13 @@ async function getWorldCupData(ifModifiedSince?: Date): Promise<WorldCupData | n
 			"method": "GET",
 		});
 		if (result.status === 304) return null;
-		json = await result.json();
+		let json: PremierLeagueData = await result.json();
+		json.fetchedAt = new Date();
+		return json;
 	} catch (e) {
 		log('538', `Error fetching 538 data: ${e}`);
 		return null;
 	}
-
-	const wcData: WorldCupData = {
-		teams: json.forecasts[0].teams,
-		matches: json.matches,
-		fetchedAt: new Date(),
-		updatedAt: json.updated_at
-	};
-	/*
-	for (const team of wcData.teams) {
-		for (const [stat, stage, closeTime] of [
-			['make_final', 'Finals', (new Date('December 14, 2022 23:59:59')).valueOf()],
-			['make_quarters', 'Quarterfinals', (new Date('December 9, 2022 23:59:59')).valueOf()],
-			['make_round_of_16', 'Round of 16', (new Date('December 2, 2022 23:59:59')).valueOf()],
-			['make_semis', 'Semifinals', (new Date('December 10, 2022 23:59:59')).valueOf()],
-			['win_league', 'Win World Cup', (new Date('December 14, 2022 23:59:59')).valueOf()],
-		]) {
-			if (teamBasedPredictions[team.code]?.some(p => p.stat === stat)) continue;
-			if (!teamBasedPredictions[team.code]) teamBasedPredictions[team.code] = [];
-			if (team[stat] < 0.20) continue;
-			const description = `Resolves YES if ${team.name}'s Men's National Team ${stat === 'win_league' ? `wins` : `reaches the ${stage} of`} the 2022 FIFA World Cup in Qatar.`;
-			const {slug} = await arae.createMarket({
-				description,
-				outcomeType: 'BINARY',
-				question: `2022 World Cup: Will ${team.name} ${stat === 'win_league' ? `win` : `reach the ${stage}`}?`,
-				//@ts-ignore
-				closeTime,
-				initialProb: 50,
-				groupId: 'ujdSUUHAKLNPFSj2PTNX',
-			});
-			const market = await arae.getMarket({slug});
-			teamBasedPredictions[team.code].push({
-				stat,
-				marketID: market.id,
-			});
-
-			await moveMarketToProb(team[stat], 100, market.id);
-			console.log(JSON.stringify(teamBasedPredictions, null, 2));
-		}
-	}*/
-	return wcData;
 }
 
 
@@ -251,22 +335,84 @@ const BUDGET = 20;
 let isFirstTime = true;
 
 export async function fiveThirtyEightLoop() {
-	if (!isFirstTime) {
-		const newData = await getWorldCupData(worldCupData?.fetchedAt);
-		if (!newData || newData.updatedAt === worldCupData?.updatedAt) return;
-		worldCupData = newData;
-	} else {
-		isFirstTime = false;
+	const newData = await getPremierLeagueData(premierLeagueData?.fetchedAt);
+	if (!newData) return;
+	premierLeagueData = newData;
+
+	let marketsCreated = 0;
+
+	for (const match of premierLeagueData) {
+		// market creation
+		/*
+		const matchDate = new Date(match.datetime);
+		const curMonth = (new Date()).getMonth();
+		if (matchDate.getTime() < Date.now() || matchDate.getMonth() !== curMonth) continue;
+		if (premierLeagueMarkets[match.id]?.length) continue;
+		if (!premierLeagueMarkets[match.id]) premierLeagueMarkets[match.id] = [];
+		let description = `Resolves YES if ${match.team1} wins against ${match.team2} on ${matchDate.toLocaleDateString()}.`;
+		description += `\nResolves NO if ${match.team2} wins or the match ends in a draw.`;
+		description += `\n\nThis market is automatically resolved by a bot based on FiveThirtyEight data.`;
+		// 3 hours after the match starts, to allow for penalties, etc.
+		const closeTime = matchDate.getTime() + 1000 * 60 * 60 * 3;
+		const question = `Premier League Football: Will ${match.team1} win against ${match.team2}?`;
+		try {
+			const {slug} = await manifold.createMarket({
+				description,
+				outcomeType: 'BINARY',
+				question,
+				//@ts-ignore
+				closeTime,
+				initialProb: 50,
+				//@ts-ignore
+				groupId: '5gsW3dPR3ySBRZCodrgm',
+			});
+			const market = await manifold.getMarket({slug});
+			premierLeagueMarkets[match.id].push({
+				greater_score: 1,
+				marketID: market.id,
+				autoResolve: true,
+			});
+
+			await moveMarketToProb(match.prob1, 100, market.id);
+			marketsCreated++;
+		} catch (e) {
+			log('538', `Error creating market '${question}' with ${process.env.NODE_ENV}: ${e}`);
+		}
+		*/
+
+		for (const market of premierLeagueMarkets[match.id] || []) {
+			// market resolution
+			if (market.autoResolve && match.status === 'post' && match.score1 !== undefined && match.score2 !== undefined) {
+				let isYes: boolean;
+				if (market.greater_score === 'tie') {
+					isYes = match.score1 === match.score2;
+				} else if (market.greater_score === 1) {
+					isYes = match.score1 > match.score2;
+				} else if (market.greater_score === 2) {
+					isYes = match.score1 < match.score2;
+				} else {
+					throw new Error(`Invalid greater_score value: ${market.greater_score}`)
+				}
+
+				const marketName = (await manifold.getMarket({id: market.marketID})).question;
+				await manifold.resolveMarket({marketId: market.marketID, outcome: isYes ? 'YES' : 'NO'});
+				log('538', `Resolved market '${marketName}' to ${isYes ? 'YES' : 'NO'}.`);
+			} else {
+				// bet
+				const matchTime = (new Date(match.datetime)).getTime();
+				// only bet if match is in the future
+				if (matchTime > Date.now()) {
+					const targetProb = match['prob' + market.greater_score];
+					const marketProb = (await manifold.getMarket({id: market.marketID})).probability;
+					if (Math.abs(targetProb - marketProb) > 0.02) await moveMarketToProb(targetProb, BUDGET, market.marketID);
+				}
+			}
+		}
 	}
 
-	for (const team of worldCupData.teams) {
-		const predictions = teamBasedPredictions[team.code];
-		if (!predictions) continue;
-
-		for (const {stat, marketID} of predictions) {
-			const prob = team[stat];
-			await moveMarketToProb(prob, BUDGET, marketID);
-		}
+	if (marketsCreated) {
+		log('538', `Created ${marketsCreated} Premier League markets.`);
+		log('538', JSON.stringify(premierLeagueMarkets, null, 2));
 	}
 }
 

@@ -115,6 +115,7 @@ const ORDERS_DATABASE = 'orders.db';
 const LOG_FILE = 'trades.log';
 
 export const sql = sqlite(ORDERS_DATABASE);
+sql.exec(`PRAGMA journal_mode=WAL;`);
 const SELECT_ALL_ORDERS = sql.prepare('SELECT * FROM orders');
 const SELECT_ORDER_BY_ID = sql.prepare<[string]>('SELECT * FROM orders WHERE id = ?');
 const SELECT_ORDERS_BY_API_KEY = sql.prepare<[string]>('SELECT * FROM orders WHERE api_key = ?');
