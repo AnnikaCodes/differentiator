@@ -3,6 +3,7 @@ import {config} from 'dotenv';
 config();
 import {Manifold} from 'manifold-sdk';
 import {cancelLimitOrder, log} from './orders';
+import * as fs from 'fs';
 
 const manifold = new Manifold(process.env.FTE_BOT_KEY);
 
@@ -184,7 +185,7 @@ interface Intermediate538MatchPrediction {
 }
 */
 
-type PremierLeagueData = PremierLeagueMatch[] & {fetchedAt: Date};
+type PremierLeagueData = PremierLeagueMatch[];
 interface PremierLeagueMatch {
 	id: number,
     league_id: number,
@@ -210,115 +211,253 @@ interface PremierLeagueMatch {
 }
 
 let premierLeagueData: PremierLeagueData;
+let lastLoopRun = 0;
 // record key is match ID
-const premierLeagueMarkets: Record<number, {greater_score: 1 | 2 | 'tie', marketID: string, autoResolve?: boolean}[]> = {
-	401447565: [{
-        greater_score: 1,
-        marketID: "jZeE5uQ56QKaOwpsRVCC",
-        autoResolve: true
-    }],
-    401447566: [{
-        greater_score: 1,
-        marketID: "3StJlyGVeHJTUJ5YoWX7",
-        autoResolve: true
-    }],
-    401447567: [{
-        greater_score: 1,
-        marketID: "kGucNHg7HIN5cGvbpJkR",
-        autoResolve: true
-    }],
-    401447568: [{
-        greater_score: 1,
-        marketID: "O8lgu1nNA5sAJRlFLYfM",
-        autoResolve: true
-    }],
-    401447569: [{
-        greater_score: 1,
-        marketID: "Jgv4MGosjZEZt7BACvwv",
-        autoResolve: true
-    }],
-    401447570: [{
-        greater_score: 1,
-        marketID: "uQmbRnniI8wbxZSTXst8",
-        autoResolve: true
-    }],
-    401447571: [{
-        greater_score: 1,
-        marketID: "XLCgQiHdcU72vkR40Z2n",
-        autoResolve: true
-    }],
-    401447572: [{
-        greater_score: 1,
-        marketID: "Nihg3aTjn4VDYoEVY7Ac",
-        autoResolve: true
-    }],
-    401447573: [{
-        greater_score: 1,
-        marketID: "JkraDjJYnfxNGfCKrr0j",
-        autoResolve: true
-    }],
-    401447574: [{
-        greater_score: 1,
-        marketID: "VeoNk3aic9OT1CCszAWt",
-        autoResolve: true
-    }],
-    401447575: [{
-        greater_score: 1,
-        marketID: "yduTJkjeS4ZTKh06jYWG",
-        autoResolve: true
-    }],
-    401447576: [{
-        greater_score: 1,
-        marketID: "9xWvx5IcHSvt3SdCjijL",
-        autoResolve: true
-    }],
-    401447579: [{
-        greater_score: 1,
-        marketID: "pfpH8V40tc8GWcB2Uzp7",
-        autoResolve: true
-    }],
-    401447580: [{
-        greater_score: 1,
-        marketID: "Y0fUlgO3aycScTdNJ5LX",
-        autoResolve: true
-    }],
-    401447581: [{
-        greater_score: 1,
-        marketID: "MUIRX1bs2XFsGfYhdJ1h",
-        autoResolve: true
-    }],
-    401447582: [{
-        greater_score: 1,
-        marketID: "umKHSkixFjMCL7EjJBpS",
-        autoResolve: true
-    }],
-    401447583: [{
-        greater_score: 1,
-        marketID: "KqwfGmuEbAmwJhqphBN9",
-        autoResolve: true
-    }],
-    401447584: [{
-        greater_score: 1,
-        marketID: "IGYVUbvezJ38UharJQil",
-        autoResolve: true
-    }]
-};
+type PremierLeagueMarkets = Record<number, {greater_score: 1 | 2 | 'tie', marketID: string, autoResolve?: boolean}[]>;
+const premierLeagueMarketsFile = 'premierLeagueMarkets.json';
+function loadPremierLeagueMarkets(): PremierLeagueMarkets | null {
+	try {
+		const data = fs.readFileSync(premierLeagueMarketsFile);
+		return JSON.parse(data.toString());
+	} catch (e) {
+		return null;
+	}
+}
 
-// returns null if no change or error
-async function getPremierLeagueData(ifModifiedSince?: Date): Promise<PremierLeagueData | null> {
-	let json;
+function savePremierLeagueMarkets(markets: PremierLeagueMarkets) {
+	fs.writeFileSync(premierLeagueMarketsFile, JSON.stringify(markets));
+	log('538', `Saved ${Object.keys(premierLeagueMarkets).length} Premier League markets.`);
+}
+
+const premierLeagueMarkets: PremierLeagueMarkets = loadPremierLeagueMarkets() || {
+	401447467: [{
+		greater_score: 1,
+		marketID: "eCteZF5PbZ67SBBUG27s",
+		autoResolve: true
+	}],
+	401447469: [{
+		greater_score: 1,
+		marketID: "cH8A2CYMz6gR6IWqYINW",
+		autoResolve: true
+	}],
+	401447575: [{
+		greater_score: 1,
+		marketID: "yduTJkjeS4ZTKh06jYWG",
+		autoResolve: true
+	}],
+	401447576: [{
+		greater_score: 1,
+		marketID: "9xWvx5IcHSvt3SdCjijL",
+		autoResolve: true
+	}],
+	401447577: [{
+		greater_score: 1,
+		marketID: "4QTb4cANeQzXNQS9lZnn",
+		autoResolve: true
+	}],
+	401447578: [{
+		greater_score: 1,
+		marketID: "kgUhAPMf4eWrfBmKldcw",
+		autoResolve: true
+	}],
+	401447579: [{
+		greater_score: 1,
+		marketID: "pfpH8V40tc8GWcB2Uzp7",
+		autoResolve: true
+	}],
+	401447580: [{
+		greater_score: 1,
+		marketID: "Y0fUlgO3aycScTdNJ5LX",
+		autoResolve: true
+	}],
+	401447581: [{
+		greater_score: 1,
+		marketID: "MUIRX1bs2XFsGfYhdJ1h",
+		autoResolve: true
+	}],
+	401447582: [{
+		greater_score: 1,
+		marketID: "umKHSkixFjMCL7EjJBpS",
+		autoResolve: true
+	}],
+	401447583: [{
+		greater_score: 1,
+		marketID: "KqwfGmuEbAmwJhqphBN9",
+		autoResolve: true
+	}],
+	401447584: [{
+		greater_score: 1,
+		marketID: "IGYVUbvezJ38UharJQil",
+		autoResolve: true
+	}],
+	401447585: [{
+		greater_score: 1,
+		marketID: "GTaz6OcJQ4PMtlXghMwp",
+		autoResolve: true
+	}],
+	401447586: [{
+		greater_score: 1,
+		marketID: "FtmMSEtxkeWVOg4sbZaW",
+		autoResolve: true
+	}],
+	401447587: [{
+		greater_score: 1,
+		marketID: "lfFyOxZ44rQ71Z3IIJ1M",
+		autoResolve: true
+	}],
+	401447588: [{
+		greater_score: 1,
+		marketID: "mNBsyigaBbs7vQEamRSD",
+		autoResolve: true
+	}],
+	401447589: [{
+		greater_score: 1,
+		marketID: "Uo0CJOjBZdxspiqxS08p",
+		autoResolve: true
+	}],
+	401447590: [{
+		greater_score: 1,
+		marketID: "TYVgrXN0feE3eD5kuz2l",
+		autoResolve: true
+	}],
+	401447591: [{
+		greater_score: 1,
+		marketID: "Y5IDEwRrID6K89SJ86uq",
+		autoResolve: true
+	}],
+	401447592: [{
+		greater_score: 1,
+		marketID: "4WxfuSgHdCj8REkCuowo",
+		autoResolve: true
+	}],
+	401447593: [{
+		greater_score: 1,
+		marketID: "GqZsZElfZTxQJKnmoPlm",
+		autoResolve: true
+	}],
+	401447594: [{
+		greater_score: 1,
+		marketID: "kWeikomtywTz2AGbFJHX",
+		autoResolve: true
+	}],
+	401447595: [{
+		greater_score: 1,
+		marketID: "WYHbwTSDZ8CnIrs5PaGi",
+		autoResolve: true
+	}],
+	401447596: [{
+		greater_score: 1,
+		marketID: "C28A0XGnO0Fnj8NqoozW",
+		autoResolve: true
+	}],
+	401447597: [{
+		greater_score: 1,
+		marketID: "zgcZC3U0gxqtZLD5rzoz",
+		autoResolve: true
+	}],
+	401447598: [{
+		greater_score: 1,
+		marketID: "sQRXPzg8PkgzcYmjUcmS",
+		autoResolve: true
+	}],
+	401447599: [{
+		greater_score: 1,
+		marketID: "L8oC0hYnPwjAjEq17CV9",
+		autoResolve: true
+	}],
+	401447600: [{
+		greater_score: 1,
+		marketID: "H5yC94akSYMJKZ17XSWQ",
+		autoResolve: true
+	}],
+	401447601: [{
+		greater_score: 1,
+		marketID: "mqo6GbSKlU2bVruA6sWR",
+		autoResolve: true
+	}],
+	401447602: [{
+		greater_score: 1,
+		marketID: "toUIKo7vEB1yoj9GXm3q",
+		autoResolve: true
+	}],
+	401447603: [{
+		greater_score: 1,
+		marketID: "rdQHIWR5CpiUCk3RpCVm",
+		autoResolve: true
+	}],
+	401447604: [{
+		greater_score: 1,
+		marketID: "iHY6dGjZ5uv2pVmFxAvJ",
+		autoResolve: true
+	}],
+	401447605: [{
+		greater_score: 1,
+		marketID: "nBAPulwb6O0CCM6Ty6zz",
+		autoResolve: true
+	}],
+	401447606: [{
+		greater_score: 1,
+		marketID: "FN9xtRSlTiPCQsrBytMg",
+		autoResolve: true
+	}],
+	401447607: [{
+		greater_score: 1,
+		marketID: "aERQdyIw1aT5qS1U6Plz",
+		autoResolve: true
+	}],
+	401447608: [{
+		greater_score: 1,
+		marketID: "zXXPJczrZaOGritwN6sG",
+		autoResolve: true
+	}],
+	401447609: [{
+		greater_score: 1,
+		marketID: "BlAxDjtbQziTo3VdnVqL",
+		autoResolve: true
+	}],
+	401447610: [{
+		greater_score: 1,
+		marketID: "AS0quhki4dD999qLOpCJ",
+		autoResolve: true
+	}],
+	401447611: [{
+		greater_score: 1,
+		marketID: "HvwphNDw9K0vFL7Ugu2G",
+		autoResolve: true
+	}],
+	401447612: [{
+		greater_score: 1,
+		marketID: "eD4gYT5xXM734fsRrw55",
+		autoResolve: true
+	}],
+	401447613: [{
+		greater_score: 1,
+		marketID: "4ElkfHGElJV4V55d7omr",
+		autoResolve: true
+	}],
+	401447614: [{
+		greater_score: 1,
+		marketID: "CPkIl4k0tqJhyPmC8Ptv",
+		autoResolve: true
+	}],
+ };
+
+async function getPremierLeagueData(ifModifiedSince?: number): Promise<PremierLeagueData | null> {
 	try {
 		const result = await fetch("https://projects.fivethirtyeight.com/soccer-predictions/forecasts/2022_premier-league_matches.json", {
 			"credentials": "include",
 			"headers": {
 				"User-Agent": "FiveThirtyEight Trading Bot/1.0",
-				"If-Modified-Since": ifModifiedSince?.toUTCString() || 'Mon, 21 Nov 2022 01:01:01 GMT',
 			},
 			"method": "GET",
 		});
 		if (result.status === 304) return null;
+		const lastModified = result.headers.get('last-modified');
+		if (lastModified && ifModifiedSince) {
+			const lastModifiedTime = (new Date(lastModified)).getTime();
+			if (lastModifiedTime < ifModifiedSince) return null;
+		}
 		let json: PremierLeagueData = await result.json();
-		json.fetchedAt = new Date();
 		return json;
 	} catch (e) {
 		log('538', `Error fetching 538 data: ${e}`);
@@ -331,24 +470,42 @@ async function getPremierLeagueData(ifModifiedSince?: Date): Promise<PremierLeag
 // record key is team code
 
 
-const BUDGET = 20;
 let isFirstTime = true;
 
 export async function fiveThirtyEightLoop() {
-	const newData = await getPremierLeagueData(premierLeagueData?.fetchedAt);
-	if (!newData) return;
-	premierLeagueData = newData;
+	const newData = await getPremierLeagueData(lastLoopRun);
+	// run every hour or when new data is available
+	if (newData === null) {
+		if (lastLoopRun > (Date.now() - 1000 * 60 * 60 * 1)) return;
+	} else {
+		premierLeagueData = newData;
+	}
+
+	lastLoopRun = Date.now();
 
 	let marketsCreated = 0;
 
+	let activePremierLeagueMarkets = 0;
 	for (const match of premierLeagueData) {
-		// market creation
-		/*
+		for (const [index, market] of premierLeagueMarkets[match.id]?.entries() || []) {
+			const data = await manifold.getMarket({id: market.marketID});
+			// closed markets?
+			if (!data.isResolved) {
+				activePremierLeagueMarkets++;
+			} else {
+				premierLeagueMarkets[match.id].splice(index, 1);
+			}
+		}
+	}
+	const budget = (await manifold.getMe()).balance / (activePremierLeagueMarkets * 10)
+	for (const match of premierLeagueData) {
 		const matchDate = new Date(match.datetime);
-		const curMonth = (new Date()).getMonth();
-		if (matchDate.getTime() < Date.now() || matchDate.getMonth() !== curMonth) continue;
 		if (premierLeagueMarkets[match.id]?.length) continue;
 		if (!premierLeagueMarkets[match.id]) premierLeagueMarkets[match.id] = [];
+
+		// only create markets for matches in the next 30 days
+		if (matchDate.getTime() < Date.now() || matchDate.getTime() > (Date.now() + 1000 * 60 * 60 * 24 * 30)) continue;
+
 		let description = `Resolves YES if ${match.team1} wins against ${match.team2} on ${matchDate.toLocaleDateString()}.`;
 		description += `\nResolves NO if ${match.team2} wins or the match ends in a draw.`;
 		description += `\n\nThis market is automatically resolved by a bot based on FiveThirtyEight data.`;
@@ -378,7 +535,6 @@ export async function fiveThirtyEightLoop() {
 		} catch (e) {
 			log('538', `Error creating market '${question}' with ${process.env.NODE_ENV}: ${e}`);
 		}
-		*/
 
 		for (const market of premierLeagueMarkets[match.id] || []) {
 			// market resolution
@@ -404,7 +560,7 @@ export async function fiveThirtyEightLoop() {
 				if (matchTime > Date.now()) {
 					const targetProb = match['prob' + market.greater_score];
 					const marketProb = (await manifold.getMarket({id: market.marketID})).probability;
-					if (Math.abs(targetProb - marketProb) > 0.02) await moveMarketToProb(targetProb, BUDGET, market.marketID);
+					if (Math.abs(targetProb - marketProb) > 0.02) await moveMarketToProb(targetProb, budget, market.marketID);
 				}
 			}
 		}
@@ -413,9 +569,10 @@ export async function fiveThirtyEightLoop() {
 	if (marketsCreated) {
 		log('538', `Created ${marketsCreated} Premier League markets.`);
 		log('538', JSON.stringify(premierLeagueMarkets, null, 2));
+		savePremierLeagueMarkets(premierLeagueMarkets);
 	}
 }
-
+savePremierLeagueMarkets(premierLeagueMarkets);
 async function moveMarketToProb(prob: number, budget: number, marketID: string) {
 	const market = await manifold.getMarket({id: marketID});
 	if (!market) {
